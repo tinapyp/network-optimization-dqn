@@ -1,85 +1,144 @@
 # Network Optimization with DQN
 
-## Overview
+This project implements a network optimization system using Deep Q-Learning (DQN) with Mininet for network simulation and Ryu for network control.
 
-This project implements a network optimization system using Deep Q-Learning (DQN) with Mininet for network simulation and Ryu for network control. The goal is to optimize network routing by training a DQN agent to learn effective routing strategies. The system also includes functionality to visualize and save the best network topology found during training.
+## Prerequisites
+
+- Docker
+- Docker Compose
+
+## Running the Project
+
+1. Clone the repository:
+
+   ```
+   git clone <repository-url>
+   cd <repository-directory>
+   ```
+
+2. Build and run the Docker containers:
+   ```
+   docker-compose up --build
+   ```
+
+This will start two containers:
+
+- Ryu controller
+- Mininet simulation with DQN agent
+
+The simulation will run for the specified number of episodes, and the best network topology will be saved as `best_topology.png` in the project root directory.
 
 ## Project Structure
 
+- `src/agent/`: Contains the DQN agent implementation
+- `src/network/`: Contains the network simulation code
+- `src/controller/`: Contains the Ryu controller implementation
+- `src/main.py`: The main script that ties everything together
+- `Dockerfile`: Defines the Docker image for the project
+- `docker-compose.yml`: Defines the multi-container Docker application
+- `requirements.txt`: Lists the Python dependencies
+
+## Customization
+
+You can modify the following files to customize the project:
+
+- `src/network/simulation.py`: Modify the network topology, state representation, action space, and reward function.
+- `src/agent/dqn_agent.py`: Adjust the DQN hyperparameters or neural network architecture.
+- `src/controller/ryu_controller.py`: Implement more sophisticated packet handling and flow rule installation.
+- `src/main.py`: Change the number of episodes, batch size, or add logging and visualization for training progress.
+
+### Modifying the Network Topology
+
+To change the network topology, edit the `create_network` method in `src/network/simulation.py`. For example, to add more switches and hosts:
+
+```python
+def create_network(self):
+    self.net = Mininet(controller=RemoteController, switch=OVSKernelSwitch, link=TCLink)
+
+    # Add switches
+    for i in range(6):  # Increased from 4 to 6
+        switch = self.net.addSwitch(f's{i+1}')
+        self.switches.append(switch)
+
+    # Add hosts
+    for i in range(6):  # Increased from 4 to 6
+        host = self.net.addHost(f'h{i+1}')
+        self.hosts.append(host)
+
+    # Add links (modify as needed for your desired topology)
+    # ...
+
+    # Add controller
+    self.net.addController('c0', controller=RemoteController, ip='127.0.0.1', port=6633)
+
+    # Start network
+    self.net.start()
 ```
-network-optimization-dqn/
-├── main.py
-├── mininet_topology/
-│   ├── __init__.py
-│   └── dynamic_topology.py
-├── requirements.txt
-├── ryu_controller/
-│   ├── __init__.py
-│   ├── dqn_controller.py
-│   ├── model/
-│   │   ├── model_versioning.py
-│   │   └── __init__.py
-│   └── network_monitor.py
-└── utils/
-    └── __init__.py
+
+Remember to update the `state_size` and `action_size` in `src/main.py` accordingly.
+
+### Adjusting DQN Hyperparameters
+
+To modify the DQN hyperparameters, edit the `__init__` method in `src/agent/dqn_agent.py`:
+
+```python
+def __init__(self, state_size, action_size):
+    self.state_size = state_size
+    self.action_size = action_size
+    self.memory = deque(maxlen=5000)  # Increased memory size
+    self.gamma = 0.99  # Changed discount factor
+    self.epsilon = 1.0
+    self.epsilon_min = 0.01
+    self.epsilon_decay = 0.995
+    self.learning_rate = 0.0005  # Changed learning rate
+    self.model = self._build_model()
 ```
 
-## Setup
+### Implementing Custom Reward Function
 
-### Prerequisites
+To implement a custom reward function, modify the `get_reward` method in `src/network/simulation.py`. For example, to consider both throughput and latency:
 
-1. **Docker**: Ensure Docker is installed on your system. You can download Docker from [Docker's official website](https://www.docker.com/products/docker-desktop).
+```python
+def get_reward(self):
+    h1, h4 = self.hosts[0], self.hosts[3]
 
-2. **Mininet and Ryu**: This project uses a Docker image that already includes Mininet and Ryu. The base image used is `iwaseyusuke/ryu-mininet`.
+    # Measure throughput
+    h1.cmd(f'iperf -c {h4.IP()} -t 5 -i 1 > iperf_result &')
+    time.sleep(6)
+    result = h1.cmd('cat iperf_result')
+    lines = result.split('\n')
+    if len(lines) > 1:
+        last_line = lines[-2]
+        throughput = float(last_line.split()[-2])
+    else:
+        throughput = 0
 
-### Build the Docker Image
+    # Measure latency
+    ping_result = h1.cmd(f'ping -c 5 {h4.IP()}')
+    latency = float(ping_result.split('/')[-3])
 
-```sh
-docker build -t network-optimization-dqn .
+    # Calculate reward based on throughput and latency
+    reward = throughput / (latency + 1)  # Add 1 to avoid division by zero
+    return reward
 ```
 
-### Run the Docker Container
+## Troubleshooting
 
-```sh
-docker run -it network-optimization-dqn
-```
+1. **Docker permissions issue**: If you encounter permission issues when running Docker commands, make sure your user is part of the `docker` group:
 
-### Install Dependencies
-
-Inside the Docker container, dependencies are installed automatically via `requirements.txt`. However, if you need to install them manually, use:
-
-```sh
-pip install -r requirements.txt
-```
-
-## Usage
-
-1. **Run the Network Simulation**
-
-   Execute the `main.py` script to create and run a network simulation with the specified number of switches and hosts.
-
-   ```sh
-   python main.py <number_of_switches> <number_of_hosts>
+   ```
+   sudo usermod -aG docker $USER
    ```
 
-   Replace `<number_of_switches>` and `<number_of_hosts>` with the desired values. For example:
+   Then, log out and log back in for the changes to take effect.
 
-   ```sh
-   python main.py 3 5
+2. **Network conflicts**: If you have network conflicts with existing Docker networks or Mininet simulations, try cleaning up your environment:
+
+   ```
+   sudo mn -c
+   docker network prune
    ```
 
-2. **Visualize and Save Topology**
+3. **Performance issues**: If the simulation is running slowly, you can try reducing the complexity of the network topology or decreasing the number of episodes in `src/main.py`.
 
-   After training the model, the system will automatically visualize and save the best network topology. The visualization will be saved as `best_topology.png` in the project directory.
-
-## Components
-
-- **`main.py`**: Initializes the network simulation using Mininet.
-- **`mininet_topology/dynamic_topology.py`**: Defines the dynamic network topology using Mininet.
-- **`ryu_controller/dqn_controller.py`**: Implements the DQN-based Ryu controller for network optimization.
-- **`ryu_controller/model/model_versioning.py`**: Handles saving and loading the best model and topology.
-- **`requirements.txt`**: Lists Python package dependencies.
-
-## Visualization
-
-The best network topology is visualized using NetworkX and Matplotlib. The visualization is saved as an image file (`best_topology.png`) and displayed to help analyze the optimal network configuration.
+4. **Visualization errors**: If you encounter issues with the topology visualization, ensure that you have the necessary X11 forwarding set up if you're running the containers on a remote machine.
