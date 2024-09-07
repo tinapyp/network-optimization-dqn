@@ -1,0 +1,6 @@
+tensorflow==2.13.1
+mininet==2.3.0.dev6
+ryu==4.34
+numpy==1.22
+matplotlib
+networkx==2.5.1

@@ -1,0 +1,14 @@
+services:
+  ryu-controller:
+    build: .
+    command: ryu-manager controller/ryu_controller.py
+    network_mode: host
+
+  mininet:
+    build: .
+    privileged: true
+    network_mode: host
+    volumes:
+      - /lib/modules:/lib/modules
+    depends_on:
+      - ryu-controller
