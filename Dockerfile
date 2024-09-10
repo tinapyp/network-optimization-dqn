@@ -1,22 +1,37 @@
-FROM ubuntu:20.04
+# Use an official Python image as the base
+FROM python:3.9-slim
 
-ENV DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    openvswitch-switch \
-    net-tools \
+# Install necessary system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    mininet \
+    gcc \
+    libffi-dev \
+    libssl-dev \
+    libxml2-dev \
+    libxslt1-dev \
+    zlib1g-dev \
+    pkg-config \
+    libhdf5-dev \
     iputils-ping \
     iproute2 \
-    iperf \
+    net-tools \
+    sudo \
+    openvswitch-switch \
     && rm -rf /var/lib/apt/lists/*
 
+# Set the working directory inside the container
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip3 install -r requirements.txt
+# Copy the project files to the working directory
+COPY . /app
 
-COPY src/ .
+# Install Python dependencies
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-CMD ["python3", "main.py"]
+# Expose the OpenFlow port used by Ryu (6633)
+EXPOSE 6633
+
+# Start Open vSwitch service and run the Ryu controller along with the simulation script
+CMD ["bash", "-c", "service openvswitch-switch start && ryu-manager src/controller/ryu_controller.py & python src/main.py"]
