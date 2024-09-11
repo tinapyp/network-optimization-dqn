@@ -45,8 +45,6 @@ pip install setuptools==57.5.0
 pip install h5py==3.6.0
 ```
 
-2. Clone this repository:
-
 ## Usage
 
 1. Run the topology optimizer to find the best network topology:
@@ -86,3 +84,11 @@ You can customize the project by modifying the following parameters:
 - In `topology_optimizer.py`: Adjust `min_switches`, `max_switches`, `min_hosts`, and `max_hosts` in the `TopologyOptimizer` class to control the range of network sizes.
 - In `ryu_controller.py`: Modify the `DQNAgent` class parameters to fine-tune the DQN algorithm.
 - In `main.py`: Add functions to dynamically modify the network structure during runtime.
+
+## Extra
+
+If get eror folder exist run this code below
+
+```bash
+sudo mn -c
+```
