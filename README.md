@@ -25,16 +25,9 @@ This project implements an SDN (Software-Defined Networking) network optimizatio
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y mininet python3-ryu python3-networkx python3-matplotlib python3-tensorflow
-pip3 install mininet
 ```
 
 2. Clone this repository:
-
-```bash
-git clone https://github.com/yourusername/sdn_optimization_project.git
-cd sdn_optimization_project
-```
 
 ## Usage
 
