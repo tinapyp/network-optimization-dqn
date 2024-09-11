@@ -25,6 +25,24 @@ This project implements an SDN (Software-Defined Networking) network optimizatio
 
 ```bash
 sudo apt-get update
+sudo apt-get install openvswitch-switch
+sudo apt-get install mininet
+```
+
+2. Install Python from https://repo.anaconda.com/miniconda/
+
+```Bash
+mkdir -p ~/miniconda3
+wget https://repo.anaconda.com/miniconda/Miniconda3-py310_24.5.0-0-Linux-aarch64.sh -O ~/miniconda3/miniconda.sh
+bash ~/miniconda3/miniconda.sh -b -u -p ~/miniconda3
+rm ~/miniconda3/miniconda.sh
+```
+
+3. Then install Depedencies
+
+```bash
+pip install setuptools==57.5.0
+pip install h5py==3.6.0
 ```
 
 2. Clone this repository:
@@ -34,8 +52,10 @@ sudo apt-get update
 1. Run the topology optimizer to find the best network topology:
 
 ```bash
-sudo python3 topology_optimizer.py
+sudo /home/user/miniconda3/bin/python topology_optimizer.py
 ```
+
+\*Note change `user` with you user
 
 This will generate an optimized topology and save it as "optimized_topology.png".
 
@@ -48,8 +68,10 @@ ryu-manager ryu_controller.py
 3. Run the main script to create the Mininet network and start the simulation:
 
 ```bash
-sudo python3 main.py
+sudo /home/user/miniconda3/bin/python main.py
 ```
+
+\*Note change `user` with you user
 
 ## Project Structure
 

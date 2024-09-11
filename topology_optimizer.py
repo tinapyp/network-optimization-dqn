@@ -1,4 +1,5 @@
 import random
+from mininet.node import OVSController
 import networkx as nx
 import matplotlib.pyplot as plt
 from mininet.net import Mininet
@@ -40,7 +41,7 @@ class TopologyOptimizer:
         return switches, hosts, links
 
     def simulate_topology(self, switches, hosts, links):
-        net = Mininet(controller=Controller, switch=OVSSwitch, link=TCLink)
+        net = Mininet(controller=OVSController, switch=OVSSwitch, link=TCLink)
 
         # Add switches
         switch_objects = {}
@@ -59,7 +60,7 @@ class TopologyOptimizer:
             net.addLink(src_obj, dst_obj)
 
         # Add controller
-        net.addController("c0")
+        # net.addController("c0")
 
         # Start the network
         net.start()
