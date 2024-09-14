@@ -43,6 +43,7 @@ rm ~/miniconda3/miniconda.sh
 ```bash
 pip install setuptools==57.5.0
 pip install h5py==3.6.0
+pip install -r requirements.txt
 ```
 
 ## Usage
